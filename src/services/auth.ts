@@ -98,16 +98,20 @@ class AuthService {
       }
 
       // Store token (handle both 'token' and 'accessToken' response formats)
-      // Check in result object first, then root level, and also check all possible nested locations
+      // Check in result.user.token first (actual API response structure), then other locations
       const responseAny = response as any;
       let token: string | undefined;
       
-      // Try all possible token locations
+      // Try all possible token locations - prioritize result.user.token (actual API structure)
       token =
+        response.result?.user?.token ||
+        response.result?.user?.accessToken ||
         response.result?.token ||
         response.result?.accessToken ||
         response.token ||
         response.accessToken ||
+        responseAny.result?.user?.token ||
+        responseAny.result?.user?.accessToken ||
         responseAny.result?.token ||
         responseAny.result?.accessToken ||
         responseAny.data?.token ||

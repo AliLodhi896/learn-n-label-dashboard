@@ -1,4 +1,7 @@
-const API_BASE_URL = 'https://learn-n-label-backend.vercel.app/';
+// Use proxy in development, direct URL in production
+const API_BASE_URL = import.meta.env.DEV 
+  ? '/' // Use Vite proxy in development
+  : 'https://learn-n-label-backend.vercel.app/'; // Direct URL in production
 
 export interface ApiError {
   message: string;
@@ -16,10 +19,12 @@ class ApiService {
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
-    const url = `${this.baseURL}${endpoint}`;
+    // Remove leading slash from endpoint if baseURL already ends with slash
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
+    const url = `${this.baseURL}${cleanEndpoint}`;
     
     const token = localStorage.getItem('authToken');
-    console.log(`API Request to ${endpoint}:`, {
+    console.log(`API Request to ${url}:`, {
       hasToken: !!token,
       tokenPreview: token ? token.substring(0, 20) + '...' : 'No token',
     });
@@ -40,6 +45,8 @@ class ApiService {
       const response = await fetch(url, {
         ...options,
         headers,
+        mode: 'cors',
+        credentials: 'omit',
       });
 
       // Check if response is JSON
@@ -98,16 +105,29 @@ class ApiService {
       // Only throw error if success is explicitly false
       return data;
     } catch (error) {
+      console.error('API Request Error:', error);
+      console.error('Request URL:', url);
+      console.error('Request Options:', { method: options.method, headers });
+      
       // If it's already an ApiError, re-throw it
       if (error && typeof error === 'object' && 'message' in error) {
         throw error;
       }
       
-      // Handle network errors and other exceptions
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-        throw {
-          message: 'Network error: Unable to connect to the server. Please check your connection.',
-        } as ApiError;
+      // Handle network errors and CORS errors
+      if (error instanceof TypeError) {
+        const errorMessage = error.message.toLowerCase();
+        if (errorMessage.includes('fetch') || errorMessage.includes('network')) {
+          // Check if it's a CORS error
+          if (errorMessage.includes('cors') || errorMessage.includes('cross-origin')) {
+            throw {
+              message: 'CORS Error: The server is not allowing requests from this origin. Please check CORS configuration on the backend.',
+            } as ApiError;
+          }
+          throw {
+            message: `Network error: ${error.message}. This might be a CORS issue. Please check your browser console for more details.`,
+          } as ApiError;
+        }
       }
       
       if (error instanceof Error) {
