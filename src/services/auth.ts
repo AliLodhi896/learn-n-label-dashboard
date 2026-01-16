@@ -15,9 +15,13 @@ export interface LoginResponse {
       email: string;
       role: string;
       name?: string;
+      token?: string;
+      accessToken?: string;
+      [key: string]: any; // Allow additional properties
     };
     CODE?: string;
     MESSAGE?: string;
+    message?: string;
   };
   token?: string;
   accessToken?: string;
@@ -26,6 +30,9 @@ export interface LoginResponse {
     email: string;
     role: string;
     name?: string;
+    token?: string;
+    accessToken?: string;
+    [key: string]: any; // Allow additional properties
   };
   message?: string;
 }
