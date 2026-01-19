@@ -23,6 +23,7 @@ import { DataGrid, GridApi, GridColDef, GridSlots, useGridApiRef } from '@mui/x-
 import IconifyIcon from 'components/base/IconifyIcon';
 import { newslettersService, Newsletter } from 'services/newsletters';
 import NewslettersPagination from './NewslettersPagination';
+import dotsIcon from 'assets/dots.png';
 
 const NewslettersTable = (): ReactElement => {
   const apiRef = useGridApiRef<GridApi>();
@@ -159,7 +160,7 @@ const NewslettersTable = (): ReactElement => {
             disabled={actionLoading}
             size="small"
           >
-            <IconifyIcon icon="mdi:dots-vertical" />
+            <img src={dotsIcon} alt="More actions" width={24} height={24} style={{ display: 'block' }} />
           </IconButton>
         ),
       },

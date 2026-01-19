@@ -12,12 +12,12 @@ const Footer = () => {
       <Typography variant="subtitle2" fontFamily={'Poppins'} color="text.primary">
         Developed <span style={{ color: 'red' }}>&#10084;</span> by{' '}
         <Link
-          href="https://themewagon.com"
+          href="https://bmybrand.com/"
           target="_blank"
           rel="noopener"
           sx={{ color: 'text.primary', '&:hover': { color: 'primary.main' } }}
         >
-          Resolute Digitals @2026
+          Bmybrand @2026
         </Link>
       </Typography>
     </Stack>
