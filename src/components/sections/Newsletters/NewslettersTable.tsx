@@ -16,7 +16,7 @@ import {
   DialogContentText,
   DialogActions,
   Button,
-  Alert,
+  // Alert,
   CircularProgress,
 } from '@mui/material';
 import { DataGrid, GridApi, GridColDef, GridSlots, useGridApiRef } from '@mui/x-data-grid';
@@ -30,7 +30,7 @@ const NewslettersTable = (): ReactElement => {
   const [search, setSearch] = useState('');
   const [newsletters, setNewsletters] = useState<Newsletter[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // const [error, setError] = useState<string | null>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedNewsletter, setSelectedNewsletter] = useState<Newsletter | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -53,15 +53,15 @@ const NewslettersTable = (): ReactElement => {
     setNewsletters(dataS);
     try {
       setLoading(true);
-      setError(null);
-      const data = await newslettersService.getAllNewsletters();
+      // setError(null);
+      // const data = await newslettersService.getAllNewsletters();
 
     } catch (err) {
-      const errorMessage =
-        err && typeof err === 'object' && 'message' in err
-          ? (err as { message: string }).message
-          : 'Failed to load newsletters';
-      setError(errorMessage);
+      // const errorMessage =
+      //   err && typeof err === 'object' && 'message' in err
+      //     ? (err as { message: string }).message
+      //     : 'Failed to load newsletters';
+      // setError(errorMessage);
     } finally {
       setLoading(false);
     }
