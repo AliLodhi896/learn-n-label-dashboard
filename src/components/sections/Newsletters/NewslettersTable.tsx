@@ -86,7 +86,7 @@ const NewslettersTable = (): ReactElement => {
 
   const handleDeleteConfirm = async () => {
     if (!selectedNewsletter) {
-      setError('No newsletter selected for deletion');
+      // setError('No newsletter selected for deletion');
       setDeleteDialogOpen(false);
       return;
     }
@@ -99,11 +99,11 @@ const NewslettersTable = (): ReactElement => {
       setSelectedNewsletter(null);
       await fetchNewsletters();
     } catch (err) {
-      const errorMessage =
-        err && typeof err === 'object' && 'message' in err
-          ? (err as { message: string }).message
-          : 'Failed to delete newsletter';
-      setError(errorMessage);
+      // const errorMessage =
+      //   err && typeof err === 'object' && 'message' in err
+      //     ? (err as { message: string }).message
+      //     : 'Failed to delete newsletter';
+      // setError(errorMessage);
     } finally {
       setActionLoading(false);
     }
