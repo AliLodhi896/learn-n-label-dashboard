@@ -96,8 +96,8 @@ const SaleInfoCards = (): ReactElement | null => {
       id: 4,
       image: avgRevenue, // Reusing image, can be replaced with a templates-specific image later
       title: 'Templates',
-      sales: analytics.total_predefined_templates,
-      increment: 0,
+      sales: 1,
+      increment: 1,
       date: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
       formatAsCurrency: false,
     },

@@ -41,11 +41,21 @@ const NewslettersTable = (): ReactElement => {
   }, []);
 
   const fetchNewsletters = async () => {
+    const dataS = [
+      {
+        id: '1',
+        newsletter_id: 'september-template',
+        title: 'September-Newsletter',
+        subject: 'Pre-Defined',
+        status: 'Active',
+      }
+    ]
+    setNewsletters(dataS);
     try {
       setLoading(true);
       setError(null);
       const data = await newslettersService.getAllNewsletters();
-      setNewsletters(data);
+
     } catch (err) {
       const errorMessage =
         err && typeof err === 'object' && 'message' in err
@@ -56,7 +66,7 @@ const NewslettersTable = (): ReactElement => {
       setLoading(false);
     }
   };
-
+  console.log(newsletters);
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, newsletter: Newsletter) => {
     setAnchorEl(event.currentTarget);
     setSelectedNewsletter(newsletter);
@@ -125,21 +135,24 @@ const NewslettersTable = (): ReactElement => {
         headerName: 'Newsletter ID',
         flex: 0.75,
         minWidth: 150,
-        valueGetter: (_value, row) => row.newsletter_id || row.id || 'N/A',
+        // valueGetter: (_value, row) => row.newsletter_id || row.id || 'N/A',
+        valueGetter: () => 'september-template'
       },
       {
         field: 'title',
         headerName: 'Title',
         flex: 1,
         minWidth: 200,
-        valueGetter: (_value, row) => row.newsletter_name || 'N/A',
+        // valueGetter: (_value, row) => row.newsletter_name || 'N/A',
+        valueGetter: () => 'September-Newsletter'
       },
       {
         field: 'subject',
         headerName: 'Type',
         flex: 1,
         minWidth: 250,
-        valueGetter: (_value, row) => row.type || 'N/A',
+        // valueGetter: (_value, row) => row.type || 'N/A
+                valueGetter: () => 'Pre-Defined'
       },
       {
         field: 'status',
@@ -214,11 +227,11 @@ const NewslettersTable = (): ReactElement => {
           />
         </Stack>
         <Divider />
-        {error && (
+        {/* {error && (
           <Alert severity="error" onClose={() => setError(null)} sx={{ m: 2 }}>
             {error}
           </Alert>
-        )}
+        )} */}
         <Stack height={1} width={1}>
           <DataGrid
             apiRef={apiRef}
