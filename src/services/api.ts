@@ -1,5 +1,6 @@
-// Use production base URL
-const API_BASE_URL = 'https://learn-n-label-backend.vercel.app/';
+// Use proxy approach - Vercel rewrites will handle /api/* requests in production
+// In development, Vite proxy will handle /api/* requests
+const API_BASE_URL = '/';
 
 export interface ApiError {
   message: string;
@@ -47,26 +48,49 @@ class ApiService {
         credentials: 'omit',
       });
 
-      // Check if response is JSON
-      const contentType = response.headers.get('content-type');
+      // Try to parse response as JSON first, regardless of content-type
+      // Some servers return JSON errors even without proper content-type header
       let data: any;
-
-      if (contentType && contentType.includes('application/json')) {
-        try {
-          data = await response.json();
-        } catch (jsonError) {
-          // If JSON parsing fails, it might be an error response
-          const text = await response.text();
+      const contentType = response.headers.get('content-type');
+      const isJsonContentType = contentType && contentType.includes('application/json');
+      
+      try {
+        // Try to parse as JSON
+        const text = await response.text();
+        if (text) {
+          try {
+            data = JSON.parse(text);
+          } catch (parseError) {
+            // Not valid JSON - could be HTML error page or plain text
+            if (isJsonContentType) {
+              // Expected JSON but got something else
+              throw {
+                message: `Invalid JSON response: ${text.substring(0, 200)}`,
+                status: response.status,
+              } as ApiError;
+            } else {
+              // Not expecting JSON, but try to provide helpful error
+              throw {
+                message: `Server error (${response.status}): ${text.substring(0, 200) || 'No error details available'}`,
+                status: response.status,
+              } as ApiError;
+            }
+          }
+        } else {
+          // Empty response
           throw {
-            message: `Invalid JSON response: ${text.substring(0, 100)}`,
+            message: `Empty response from server. Status: ${response.status}`,
             status: response.status,
           } as ApiError;
         }
-      } else {
-        // Non-JSON response (could be HTML error page)
-        await response.text(); // Read the response to avoid memory leaks
+      } catch (error) {
+        // If it's already an ApiError, re-throw it
+        if (error && typeof error === 'object' && 'message' in error && 'status' in error) {
+          throw error;
+        }
+        // Otherwise, create a generic error
         throw {
-          message: `Unexpected response format. Status: ${response.status}`,
+          message: `Failed to parse response. Status: ${response.status}`,
           status: response.status,
         } as ApiError;
       }
@@ -77,6 +101,7 @@ class ApiService {
           data.result?.MESSAGE ||
           data.result?.message ||
           data.message ||
+          data.error ||
           'An error occurred';
         const error: ApiError = {
           message: errorMessage,
@@ -87,15 +112,24 @@ class ApiService {
 
       // If success is true or not specified, check response.ok
       if (!response.ok) {
+        // For 500 errors, try to extract more details
         const errorMessage =
           data.result?.MESSAGE ||
           data.result?.message ||
           data.message ||
-          `Request failed with status ${response.status}`;
+          data.error ||
+          (response.status === 500 
+            ? 'Internal server error. Please check the backend logs.' 
+            : `Request failed with status ${response.status}`);
         const error: ApiError = {
           message: errorMessage,
           status: response.status,
         };
+        console.error(`API Error (${response.status}):`, {
+          url,
+          errorMessage,
+          responseData: data,
+        });
         throw error;
       }
 

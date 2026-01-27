@@ -49,6 +49,7 @@ class AuthService {
   private readonly USER_KEY = 'user';
 
   async login(credentials: LoginCredentials): Promise<LoginResponse> {
+    console.log('heheh')
     try {
       console.log('Login attempt with credentials:', { email: credentials.email });
       const response = await apiService.post<LoginResponse>(
