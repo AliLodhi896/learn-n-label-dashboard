@@ -1,7 +1,5 @@
-// Use proxy in both development and production to avoid CORS issues
-// In dev: Vite proxy handles it
-// In production: Vercel rewrites handle it
-const API_BASE_URL = '/';
+// Use production base URL
+const API_BASE_URL = 'https://learn-n-label-backend.vercel.app/';
 
 export interface ApiError {
   message: string;

@@ -36,7 +36,20 @@ const UsersTable = (): ReactElement => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [addUserDialogOpen, setAddUserDialogOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  const [addUserFormData, setAddUserFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    address: '',
+  });
+  const [formErrors, setFormErrors] = useState<{
+    name?: string;
+    email?: string;
+    password?: string;
+    address?: string;
+  }>({});
 
   useEffect(() => {
     fetchUsers();
@@ -210,6 +223,80 @@ const UsersTable = (): ReactElement => {
         valueGetter: (_value, row) => row.role || 'N/A',
       },
       {
+        field: 'subscription_plan',
+        headerName: 'Subscription Plan',
+        flex: 1,
+        minWidth: 180,
+        valueGetter: (_value, row) => {
+          if (row.subscription?.plan?.plan_name) {
+            return row.subscription.plan.plan_name;
+          }
+          return 'No Plan';
+        },
+        renderCell: (params) => {
+          const planName = params.row.subscription?.plan?.plan_name;
+          
+          return (
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Typography variant="body2" color="text.primary" fontWeight={500}>
+                {planName || 'Trial Period'}
+              </Typography>
+            </Stack>
+          );
+        },
+      },
+      {
+        field: 'subscription_status',
+        headerName: 'Subscription Status',
+        flex: 0.75,
+        minWidth: 150,
+        valueGetter: (_value, row) => {
+          if (row.subscription?.status) {
+            return row.subscription.status;
+          }
+          return 'None';
+        },
+        renderCell: (params) => {
+          const subscriptionStatus = params.row.subscription?.subscription_type;
+          const hasActiveSubscription = params.row.subscription?.has_active_subscription || params.row.has_active_subscription;
+          
+          if (!subscriptionStatus) {
+            return (
+              <Chip
+                label="No Subscription"
+                size="small"
+                variant="outlined"
+                sx={{ fontSize: '0.75rem' }}
+              />
+            );
+          }
+          
+          const statusColor = hasActiveSubscription ? 'success' : 
+                             subscriptionStatus.toLowerCase() === 'expired' ? 'error' :
+                             subscriptionStatus.toLowerCase() === 'trial' ? 'info' : 'default';
+          
+          return (
+            <Chip
+              label={subscriptionStatus}
+              color={statusColor as any}
+              size="small"
+              // sx={{ fontSize: '0.75rem' }}
+              sx={
+                hasActiveSubscription
+                  ? {
+                      backgroundColor: 'primary.light',
+                      color: 'common.white',
+                      '& .MuiChip-label': {
+                        color: 'common.white',
+                      },
+                    }
+                  : {}
+              }
+            />
+          );
+        },
+      },
+      {
         field: 'status',
         headerName: 'Status',
         flex: 0.75,
@@ -280,6 +367,63 @@ const UsersTable = (): ReactElement => {
     handleGridSearch(searchValue);
   };
 
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validatePassword = (password: string): { valid: boolean; message?: string } => {
+    if (password.length < 6) {
+      return { valid: false, message: 'Password must be at least 6 characters long' };
+    }
+    return { valid: true };
+  };
+
+  const handleFormFieldChange = (field: string, value: string) => {
+    setAddUserFormData(prev => ({ ...prev, [field]: value }));
+    
+    // Clear error for this field when user starts typing
+    if (formErrors[field as keyof typeof formErrors]) {
+      setFormErrors(prev => ({ ...prev, [field]: undefined }));
+    }
+
+    // Real-time validation
+    if (field === 'email' && value) {
+      if (!validateEmail(value)) {
+        setFormErrors(prev => ({ ...prev, email: 'Please enter a valid email address' }));
+      }
+    }
+    
+    if (field === 'password' && value) {
+      const passwordValidation = validatePassword(value);
+      if (!passwordValidation.valid) {
+        setFormErrors(prev => ({ ...prev, password: passwordValidation.message }));
+      }
+    }
+  };
+
+  const validateForm = (): boolean => {
+    const errors: typeof formErrors = {};
+
+    if (!addUserFormData.email.trim()) {
+      errors.email = 'Email is required';
+    } else if (!validateEmail(addUserFormData.email)) {
+      errors.email = 'Please enter a valid email address';
+    }
+
+    if (!addUserFormData.password.trim()) {
+      errors.password = 'Password is required';
+    } else {
+      const passwordValidation = validatePassword(addUserFormData.password);
+      if (!passwordValidation.valid) {
+        errors.password = passwordValidation.message;
+      }
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   return (
     <>
       <Stack
@@ -300,22 +444,32 @@ const UsersTable = (): ReactElement => {
           <Typography variant="h5" color="text.primary">
             Users
           </Typography>
-          <TextField
-            variant="filled"
-            placeholder="Search users..."
-            id="search-input"
-            name="users-search-input"
-            onChange={handleChange}
-            value={search}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end" sx={{ width: 24, height: 24 }}>
-                  <IconifyIcon icon="mdi:search" width={1} height={1} />
-                </InputAdornment>
-              ),
-            }}
-            sx={{ minWidth: 250 }}
-          />
+          <Stack direction="row" spacing={2} alignItems="center">
+            <TextField
+              variant="filled"
+              placeholder="Search users..."
+              id="search-input"
+              name="users-search-input"
+              onChange={handleChange}
+              value={search}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end" sx={{ width: 24, height: 24 }}>
+                    <IconifyIcon icon="mdi:search" width={1} height={1} />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{ minWidth: 250 }}
+            />
+            <Button
+              variant="contained"
+              startIcon={<IconifyIcon icon="mdi:account-plus" width={18} height={18} />}
+              onClick={() => setAddUserDialogOpen(true)}
+              sx={{ borderRadius: 10 }}
+            >
+              Add User
+            </Button>
+          </Stack>
         </Stack>
         <Divider />
         {error && (
@@ -434,6 +588,274 @@ const UsersTable = (): ReactElement => {
             disabled={actionLoading}
           >
             {actionLoading ? <CircularProgress size={20} /> : 'Delete'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog 
+        open={addUserDialogOpen} 
+        onClose={() => {
+          setAddUserDialogOpen(false);
+          setAddUserFormData({ name: '', email: '', password: '', address: '' });
+          setFormErrors({});
+          setError(null);
+        }} 
+        maxWidth="sm" 
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            boxShadow: (theme) => theme.shadows[24],
+          }
+        }}
+      >
+        <DialogTitle
+          sx={{
+            pb: 2,
+            pt: 3,
+            px: 3,
+            borderBottom: 1,
+            borderColor: 'divider',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.5,
+            background: (theme) => `linear-gradient(135deg, ${theme.palette.primary.main}15 0%, ${theme.palette.primary.main}05 100%)`,
+          }}
+        >
+          <Stack
+            sx={{
+              width: 48,
+              height: 48,
+              borderRadius: 2,
+              bgcolor: 'primary.main',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <IconifyIcon 
+              icon="mdi:account-plus" 
+              width={24} 
+              height={24} 
+              sx={{ color: 'white' }} 
+            />
+          </Stack>
+          <Stack>
+            <Typography variant="h6" component="span" fontWeight={600}>
+              Add New User
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Create a new user account with subscription access
+            </Typography>
+          </Stack>
+        </DialogTitle>
+        <DialogContent sx={{ px: 3, py: 3 }}>
+          {error && (
+            <Alert 
+              severity="error" 
+              onClose={() => setError(null)} 
+              sx={{ mb: 3, borderRadius: 2 }}
+              icon={<IconifyIcon icon="mdi:alert-circle" width={20} height={20} />}
+            >
+              {error}
+            </Alert>
+          )}
+          <Stack spacing={3} mt={2}>
+            <Stack direction="row" spacing={2}>
+              <TextField
+                label="Full Name"
+                fullWidth
+                variant="outlined"
+                value={addUserFormData.name}
+                onChange={(e) => handleFormFieldChange('name', e.target.value)}
+                disabled={actionLoading}
+                placeholder="Enter user's full name"
+                error={!!formErrors.name}
+                helperText={formErrors.name}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      '& .MuiOutlinedInput-notchedOutline': {
+                        borderColor: 'primary.main',
+                      },
+                    },
+                  }
+                }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <IconifyIcon icon="mdi:account" width={20} height={20} sx={{ color: 'text.secondary' }} />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              <TextField
+                label="Email Address"
+                fullWidth
+                variant="outlined"
+                type="email"
+                value={addUserFormData.email}
+                onChange={(e) => handleFormFieldChange('email', e.target.value)}
+                disabled={actionLoading}
+                required
+                placeholder="user@example.com"
+                error={!!formErrors.email}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      '& .MuiOutlinedInput-notchedOutline': {
+                        borderColor: 'primary.main',
+                      },
+                    },
+                  }
+                }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <IconifyIcon icon="mdi:email-outline" width={20} height={20} sx={{ color: 'text.secondary' }} />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Stack>
+            <Stack direction="row" spacing={2}>
+              <TextField
+                label="Password"
+                fullWidth
+                variant="outlined"
+                type="password"
+                value={addUserFormData.password}
+                onChange={(e) => handleFormFieldChange('password', e.target.value)}
+                disabled={actionLoading}
+                required
+                placeholder="Enter a secure password"
+                error={!!formErrors.password}
+                helperText={formErrors.password || 'Minimum 6 characters required'}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      '& .MuiOutlinedInput-notchedOutline': {
+                        borderColor: 'primary.main',
+                      },
+                    },
+                  }
+                }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <IconifyIcon icon="mdi:lock-outline" width={20} height={20} sx={{ color: 'text.secondary' }} />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              <TextField
+                label="Address"
+                fullWidth
+                variant="outlined"
+                value={addUserFormData.address}
+                onChange={(e) => handleFormFieldChange('address', e.target.value)}
+                disabled={actionLoading}
+                placeholder="Enter user's address (optional)"
+                error={!!formErrors.address}
+                helperText={formErrors.address || 'Optional: User physical address'}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      '& .MuiOutlinedInput-notchedOutline': {
+                        borderColor: 'primary.main',
+                      },
+                    },
+                  }
+                }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <IconifyIcon icon="mdi:map-marker-outline" width={20} height={20} sx={{ color: 'text.secondary' }} />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Stack>
+          </Stack>
+        </DialogContent>
+        <Divider />
+        <DialogActions sx={{ px: 3, py: 2.5, gap: 1.5 }}>
+          <Button 
+            onClick={() => {
+              setAddUserDialogOpen(false);
+              setAddUserFormData({ name: '', email: '', password: '', address: '' });
+              setFormErrors({});
+              setError(null);
+            }} 
+            disabled={actionLoading}
+            variant="outlined"
+            sx={{
+              borderRadius: 2,
+              px: 3,
+              textTransform: 'none',
+              minWidth: 100,
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={async () => {
+              if (!validateForm()) {
+                return;
+              }
+              try {
+                setActionLoading(true);
+                setError(null);
+                await usersService.createUser({
+                  name: addUserFormData.name || undefined,
+                  email: addUserFormData.email.trim(),
+                  password: addUserFormData.password,
+                  address: addUserFormData.address || undefined,
+                });
+                setAddUserDialogOpen(false);
+                setAddUserFormData({ name: '', email: '', password: '', address: '' });
+                setFormErrors({});
+                await fetchUsers();
+              } catch (err) {
+                const errorMessage =
+                  err && typeof err === 'object' && 'message' in err
+                    ? (err as { message: string }).message
+                    : 'Failed to create user';
+                setError(errorMessage);
+              } finally {
+                setActionLoading(false);
+              }
+            }}
+            color="primary"
+            variant="contained"
+            disabled={actionLoading || !!formErrors.email || !!formErrors.password || !addUserFormData.email.trim() || !addUserFormData.password.trim()}
+            startIcon={
+              actionLoading ? (
+                <CircularProgress size={16} sx={{ color: 'inherit' }} />
+              ) : (
+                <IconifyIcon icon="mdi:account-plus" width={18} height={18} />
+              )
+            }
+            sx={{
+              borderRadius: 2,
+              px: 3,
+              textTransform: 'none',
+              minWidth: 140,
+              boxShadow: (theme) => theme.shadows[4],
+              '&:hover': {
+                boxShadow: (theme) => theme.shadows[8],
+              },
+            }}
+          >
+            {actionLoading ? 'Creating...' : 'Create User'}
           </Button>
         </DialogActions>
       </Dialog>

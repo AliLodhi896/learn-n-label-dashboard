@@ -16,9 +16,9 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-        target: 'https://learn-n-label-backend.vercel.app',
+        target: 'http://localhost:3009',
         changeOrigin: true,
-        secure: true,
+        secure: false,
         rewrite: (path) => path,
       },
     },

@@ -1,5 +1,29 @@
 import { apiService } from './api';
 
+export interface SubscriptionPlan {
+  id?: string;
+  plan_id?: string;
+  plan_name?: string;
+  description?: string;
+  price?: number;
+  currency?: string;
+  duration_days?: number;
+  features?: string[];
+}
+
+export interface UserSubscription {
+  id?: string;
+  subscription_type?: string;
+  status?: string;
+  trial_start_date?: string;
+  trial_end_date?: string;
+  subscription_start_date?: string;
+  subscription_end_date?: string;
+  is_trial_used?: boolean;
+  has_active_subscription?: boolean;
+  plan?: SubscriptionPlan | null;
+}
+
 export interface User {
   _id: string;
   id?: string;
@@ -16,6 +40,8 @@ export interface User {
   created_at?: string;
   updated_at?: string;
   last_login?: string;
+  subscription?: UserSubscription | null;
+  has_active_subscription?: boolean;
   [key: string]: any;
 }
 
@@ -93,6 +119,44 @@ class UsersService {
         throw error;
       }
       throw new Error('Failed to delete user');
+    }
+  }
+
+  async createUser(data: { name?: string; email: string; password: string; address?: string }): Promise<User> {
+    try {
+      const response = await apiService.post<UsersResponse>('/api/auth/register', data);
+      console.log('Create User API Response:', response);
+      
+      let createdUser: User | null = null;
+      
+      // Handle different response structures
+      if ((response as any).user) {
+        createdUser = (response as any).user;
+      } else if (response.success && response.result) {
+        if ((response.result as any).user) {
+          createdUser = (response.result as any).user;
+        } else if (typeof response.result === 'object' && !Array.isArray(response.result)) {
+          createdUser = response.result as any;
+        }
+      } else if ((response as any).users && Array.isArray((response as any).users) && (response as any).users.length > 0) {
+        createdUser = (response as any).users[0];
+      }
+      
+      if (!createdUser) {
+        throw new Error('Invalid response format: user data not found');
+      }
+      
+      return {
+        ...createdUser,
+        _id: createdUser.id || createdUser._id || String(Math.random()),
+        id: createdUser.id || createdUser._id || String(Math.random()),
+      };
+    } catch (error) {
+      console.error('Create User Error:', error);
+      if (error && typeof error === 'object' && 'message' in error) {
+        throw error;
+      }
+      throw new Error('Failed to create user');
     }
   }
 }
