@@ -5,7 +5,13 @@ export interface Label {
   id: string;
   label_id?: string;
   label_name?: string;
-  label_image?: string;
+  label_image?: string; // legacy/compat (some APIs may still return it)
+  type?: 'pre-defined' | 'custom' | string;
+  labels?: Array<{
+    label_name?: string;
+    label_image?: string;
+    [key: string]: any;
+  }>;
   name?: string;
   description?: string;
   color?: string;
@@ -64,6 +70,54 @@ class LabelsService {
         throw error;
       }
       throw new Error('Failed to fetch labels');
+    }
+  }
+
+  async createLabel(data: {
+    label_id: string;
+    label_name: string;
+    label_image_file: File;
+  }): Promise<Label> {
+    try {
+      // Backend expects multipart/form-data with req.file
+      const form = new FormData();
+      form.append('label_id', data.label_id);
+      form.append('label_name', data.label_name);
+      form.append('label_image', data.label_image_file);
+
+      // Your backend route is mounted here (as provided earlier):
+      // labelsRouter.post('/create-labels', validateAuthToken, validateLabels, LabelsController.createLabel);
+      // -> called from frontend as /api/admin/create-labels
+      const response = await apiService.post<LabelsResponse>('/api/admin/create-labels', form);
+      console.log('Create Label API Response:', response);
+
+      let createdLabel: Label | null = null;
+
+      if ((response as any).label) {
+        createdLabel = (response as any).label;
+      } else if (response.success && response.result && typeof response.result === 'object') {
+        createdLabel = (response.result as any).label || (response.result as any);
+      } else if (response.labels && Array.isArray(response.labels) && response.labels.length > 0) {
+        createdLabel = response.labels[0];
+      } else if ((response as any).data && typeof (response as any).data === 'object') {
+        createdLabel = (response as any).data;
+      }
+
+      if (!createdLabel) {
+        throw new Error('Invalid response format: label data not found');
+      }
+
+      return {
+        ...createdLabel,
+        _id: createdLabel.id || createdLabel._id,
+        id: createdLabel.id || createdLabel._id || String(Math.random()),
+      };
+    } catch (error) {
+      console.error('Create Label Error:', error);
+      if (error && typeof error === 'object' && 'message' in error) {
+        throw error;
+      }
+      throw new Error('Failed to create label');
     }
   }
 

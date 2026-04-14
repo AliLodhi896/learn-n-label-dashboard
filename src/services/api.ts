@@ -1,5 +1,6 @@
-// Use proxy approach - Vercel rewrites will handle /api/* requests in production
-// In development, Vite proxy will handle /api/* requests
+// Use /api proxy in dev and Vercel rewrites in production
+// - dev: Vite proxy forwards /api/* to backend
+// - prod: Vercel rewrites forward /api/* to backend
 const API_BASE_URL = '/';
 
 export interface ApiError {
@@ -28,8 +29,13 @@ class ApiService {
       tokenPreview: token ? token.substring(0, 20) + '...' : 'No token',
     });
     
+    const isFormData =
+      typeof FormData !== 'undefined' && options.body instanceof FormData;
+
+    // If sending FormData, DO NOT set Content-Type manually.
+    // The browser will set the correct multipart boundary.
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
+      ...(!isFormData ? { 'Content-Type': 'application/json' } : {}),
       ...(options.headers as Record<string, string>),
     };
 
@@ -182,7 +188,7 @@ class ApiService {
     return this.request<T>(endpoint, {
       ...options,
       method: 'POST',
-      body: data ? JSON.stringify(data) : undefined,
+      body: data instanceof FormData ? data : data ? JSON.stringify(data) : undefined,
     });
   }
 

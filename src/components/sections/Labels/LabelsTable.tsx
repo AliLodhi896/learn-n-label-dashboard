@@ -36,17 +36,21 @@ const LabelsTable = (): ReactElement => {
   const [selectedLabel, setSelectedLabel] = useState<Label | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [editFormData, setEditFormData] = useState({
     label_name: '',
     label_image: '',
   });
+  const [addFormData, setAddFormData] = useState({
+    label_name: '',
+  });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [addImagePreview, setAddImagePreview] = useState<string | null>(null);
+  const [addImageFile, setAddImageFile] = useState<File | null>(null);
 
   useEffect(() => {
     fetchLabels();
-    console.log(imageFile);
   }, []);
 
   const fetchLabels = async () => {
@@ -76,16 +80,26 @@ const LabelsTable = (): ReactElement => {
     setSelectedLabel(null);
   };
 
+  const handleAddClick = () => {
+    setError(null);
+    setAddFormData({ label_name: '' });
+    setAddImagePreview(null);
+    setAddImageFile(null);
+    setAddDialogOpen(true);
+  };
+
   const handleEditClick = () => {
     const labelToEdit = selectedLabel;
     if (labelToEdit) {
-      const imageUrl = labelToEdit.label_image || '';
+      const imageUrl =
+        labelToEdit.label_image ||
+        labelToEdit.labels?.[0]?.label_image ||
+        '';
       setEditFormData({
         label_name: labelToEdit.label_name || labelToEdit.name || '',
         label_image: imageUrl,
       });
       setImagePreview(imageUrl || null);
-      setImageFile(null);
     }
     handleMenuClose();
     setSelectedLabel(labelToEdit);
@@ -121,7 +135,6 @@ const LabelsTable = (): ReactElement => {
         return;
       }
 
-      setImageFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64String = reader.result as string;
@@ -132,6 +145,80 @@ const LabelsTable = (): ReactElement => {
         }));
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleAddFormChange = (field: string, value: string) => {
+    setAddFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleAddImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        setError('Please select a valid image file');
+        return;
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        setError('Image size should be less than 5MB');
+        return;
+      }
+
+      setAddImageFile(file);
+      setAddImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleAddConfirm = async () => {
+    try {
+      const trimmedName = addFormData.label_name.trim();
+      if (!trimmedName) {
+        setError('Label name is required');
+        return;
+      }
+      if (trimmedName.length < 3) {
+        setError('Label name must be at least 3 characters long');
+        return;
+      }
+      if (!addImageFile) {
+        setError('label_image file is required');
+        return;
+      }
+      setActionLoading(true);
+      setError(null);
+
+      const created = await labelsService.createLabel({
+        label_id: trimmedName,
+        label_name: trimmedName,
+        label_image_file: addImageFile,
+      });
+
+      // Optimistically update table immediately so the user sees the new label,
+      // even if the list endpoint returns a different dataset.
+      setLabels((prev) => [created, ...prev]);
+      setAddDialogOpen(false);
+      setAddFormData({ label_name: '' });
+      setAddImagePreview(null);
+      setAddImageFile(null);
+
+      // Best-effort sync with server list
+      try {
+        await fetchLabels();
+      } catch {
+        // keep optimistic state
+      }
+    } catch (err) {
+      const errorMessage =
+        err && typeof err === 'object' && 'message' in err
+          ? (err as { message: string }).message
+          : 'Failed to create label';
+      setError(errorMessage);
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -156,7 +243,6 @@ const LabelsTable = (): ReactElement => {
       setSelectedLabel(null);
       setEditFormData({ label_name: '', label_image: '' });
       setImagePreview(null);
-      setImageFile(null);
       await fetchLabels();
     } catch (err) {
       const errorMessage =
@@ -234,11 +320,16 @@ const LabelsTable = (): ReactElement => {
         headerName: 'Image',
         flex: 0.75,
         minWidth: 150,
-        renderCell: (params) => (
-          <Stack direction="row" spacing={1} alignItems="center">
-            {params.row.label_image ? (
+        renderCell: (params) => {
+          const imageUrl =
+            params.row.label_image ||
+            params.row.labels?.[0]?.label_image ||
+            '';
+          return (
+            <Stack direction="row" spacing={1} alignItems="center">
+              {imageUrl ? (
               <img
-                src={params.row.label_image}
+                src={imageUrl}
                 alt={params.row.label_name || 'Label'}
                 style={{
                   width: 40,
@@ -253,7 +344,8 @@ const LabelsTable = (): ReactElement => {
               </Typography>
             )}
           </Stack>
-        ),
+          );
+        },
       },
       {
         field: 'actions',
@@ -304,22 +396,38 @@ const LabelsTable = (): ReactElement => {
           <Typography variant="h5" color="text.primary">
             Labels
           </Typography>
-          <TextField
-            variant="filled"
-            placeholder="Search labels..."
-            id="search-input"
-            name="labels-search-input"
-            onChange={handleSearchChange}
-            value={search}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end" sx={{ width: 24, height: 24 }}>
-                  <IconifyIcon icon="mdi:search" width={1} height={1} />
-                </InputAdornment>
-              ),
-            }}
-            sx={{ minWidth: 250 }}
-          />
+          <Stack direction="row" spacing={2} alignItems="center">
+            <Button
+              variant="contained"
+              onClick={handleAddClick}
+              disabled={actionLoading}
+              startIcon={<IconifyIcon icon="mdi:plus" width={18} height={18} />}
+              sx={{
+                borderRadius: 2,
+                px: 2.5,
+                textTransform: 'none',
+                minWidth: 140,
+              }}
+            >
+              Add Label
+            </Button>
+            <TextField
+              variant="filled"
+              placeholder="Search labels..."
+              id="search-input"
+              name="labels-search-input"
+              onChange={handleSearchChange}
+              value={search}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end" sx={{ width: 24, height: 24 }}>
+                    <IconifyIcon icon="mdi:search" width={1} height={1} />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{ minWidth: 250 }}
+            />
+          </Stack>
         </Stack>
         <Divider />
         {error && (
@@ -386,6 +494,230 @@ const LabelsTable = (): ReactElement => {
           />
         </Stack>
       </Stack>
+
+      <Dialog
+        open={addDialogOpen}
+        onClose={() => setAddDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            boxShadow: (theme) => theme.shadows[24],
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            pb: 2,
+            pt: 3,
+            px: 3,
+            borderBottom: 1,
+            borderColor: 'divider',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.5,
+          }}
+        >
+          <IconifyIcon
+            icon="mdi:label-plus"
+            width={24}
+            height={24}
+            sx={{ color: 'primary.main' }}
+          />
+          <Typography variant="h6" component="span" fontWeight={600}>
+            Add New Label
+          </Typography>
+        </DialogTitle>
+        <DialogContent sx={{ px: 3, py: 3 }}>
+          <Stack spacing={3} mt={2}>
+            <TextField
+              label="Label Name"
+              fullWidth
+              variant="outlined"
+              value={addFormData.label_name}
+              onChange={(e) => handleAddFormChange('label_name', e.target.value)}
+              disabled={actionLoading}
+              required
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 2,
+                },
+              }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <IconifyIcon icon="mdi:label" width={20} height={20} sx={{ color: 'text.secondary' }} />
+                  </InputAdornment>
+                ),
+              }}
+            />
+
+            <Stack spacing={2}>
+              <Typography variant="subtitle2" color="text.primary" fontWeight={600}>
+                Label Image
+              </Typography>
+
+              {addImagePreview ? (
+                <Stack
+                  spacing={2}
+                  sx={{
+                    p: 2,
+                    border: 1,
+                    borderColor: 'divider',
+                    borderRadius: 2,
+                    bgcolor: 'action.focus',
+                  }}
+                >
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <Box
+                      sx={{
+                        position: 'relative',
+                        width: 120,
+                        height: 120,
+                        borderRadius: 2,
+                        overflow: 'hidden',
+                        border: 2,
+                        borderColor: 'divider',
+                        bgcolor: 'background.paper',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <img
+                        src={addImagePreview}
+                        alt="Label preview"
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                        }}
+                      />
+                    </Box>
+                    <Stack spacing={1} flex={1}>
+                      <Button
+                        variant="outlined"
+                        component="label"
+                        startIcon={<IconifyIcon icon="mdi:image-edit" width={18} height={18} />}
+                        disabled={actionLoading}
+                        sx={{
+                          width: 'fit-content',
+                          borderRadius: 2,
+                        }}
+                      >
+                        Change Image
+                        <input
+                          type="file"
+                          hidden
+                          accept="image/*"
+                          onChange={handleAddImageUpload}
+                          disabled={actionLoading}
+                        />
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        color="error"
+                        startIcon={<IconifyIcon icon="mdi:delete-outline" width={18} height={18} />}
+                        onClick={() => {
+                          setAddImagePreview(null);
+                          setAddImageFile(null);
+                        }}
+                        disabled={actionLoading}
+                        sx={{
+                          width: 'fit-content',
+                          borderRadius: 2,
+                        }}
+                      >
+                        Remove Image
+                      </Button>
+                    </Stack>
+                  </Stack>
+                </Stack>
+              ) : (
+                <Stack
+                  sx={{
+                    border: 2,
+                    borderStyle: 'dashed',
+                    borderColor: 'divider',
+                    borderRadius: 2,
+                    p: 4,
+                    bgcolor: 'action.focus',
+                    cursor: actionLoading ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      borderColor: 'primary.main',
+                      bgcolor: 'action.hover',
+                    },
+                  }}
+                >
+                  <Button
+                    variant="outlined"
+                    component="label"
+                    startIcon={<IconifyIcon icon="mdi:cloud-upload-outline" width={20} height={20} />}
+                    disabled={actionLoading}
+                    sx={{
+                      width: '100%',
+                      py: 1.5,
+                      borderRadius: 2,
+                      textTransform: 'none',
+                      fontSize: '0.95rem',
+                    }}
+                  >
+                    Upload Image
+                    <input
+                      type="file"
+                      hidden
+                      accept="image/*"
+                      onChange={handleAddImageUpload}
+                      disabled={actionLoading}
+                    />
+                  </Button>
+                  <Typography variant="caption" color="text.secondary" textAlign="center" sx={{ mt: 1 }}>
+                    PNG, JPG or GIF (max. 5MB)
+                  </Typography>
+                </Stack>
+              )}
+            </Stack>
+          </Stack>
+        </DialogContent>
+        <Divider />
+        <DialogActions sx={{ px: 3, py: 2.5, gap: 1.5 }}>
+          <Button
+            onClick={() => setAddDialogOpen(false)}
+            disabled={actionLoading}
+            variant="outlined"
+            sx={{
+              borderRadius: 2,
+              px: 3,
+              textTransform: 'none',
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleAddConfirm}
+            color="primary"
+            variant="contained"
+            disabled={actionLoading || !addFormData.label_name.trim()}
+            startIcon={
+              actionLoading ? (
+                <CircularProgress size={16} sx={{ color: 'inherit' }} />
+              ) : (
+                <IconifyIcon icon="mdi:plus" width={18} height={18} />
+              )
+            }
+            sx={{
+              borderRadius: 2,
+              px: 3,
+              textTransform: 'none',
+              minWidth: 140,
+            }}
+          >
+            {actionLoading ? 'Creating...' : 'Create Label'}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Menu
         anchorEl={anchorEl}
@@ -540,7 +872,6 @@ const LabelsTable = (): ReactElement => {
                         startIcon={<IconifyIcon icon="mdi:delete-outline" width={18} height={18} />}
                         onClick={() => {
                           setImagePreview(null);
-                          setImageFile(null);
                           setEditFormData((prev) => ({ ...prev, label_image: '' }));
                         }}
                         disabled={actionLoading}

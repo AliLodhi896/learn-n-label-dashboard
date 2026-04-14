@@ -36,13 +36,13 @@ const navItems: NavItem[] = [
     active: true,
     collapsible: false,
   },
-  // {
-  //   title: 'Labels',
-  //   path: '/labels',
-  //   icon: 'mdi:label',
-  //   active: true,
-  //   collapsible: false,
-  // },
+  {
+    title: 'Labels',
+    path: '/labels',
+    icon: 'mdi:label',
+    active: true,
+    collapsible: false,
+  },
   // {
   //   title: 'Newsletters',
   //   path: '/newsletters',
