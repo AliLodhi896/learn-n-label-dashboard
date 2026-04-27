@@ -78,10 +78,10 @@ const SubscriptionSalesTable = (): ReactElement => {
   };
 
   const getStatusColor = (status?: string, hasActive?: boolean) => {
-    if (hasActive) return 'success';
+    if (hasActive) return 'warning';
     switch (status?.toLowerCase()) {
       case 'active':
-        return 'success';
+        return 'warning';
       case 'expired':
         return 'error';
       case 'cancelled':
@@ -209,6 +209,7 @@ const SubscriptionSalesTable = (): ReactElement => {
               label={status}
               color={getStatusColor(status, params.row.has_active_subscription) as any}
               size="small"
+              sx={{ color: 'common.white' }}
             />
           );
         },

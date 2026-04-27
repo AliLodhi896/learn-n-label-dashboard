@@ -37,6 +37,8 @@ const Users = lazy(async () => import('pages/users/Users'));
 const Labels = lazy(async () => import('pages/labels/Labels'));
 const Newsletters = lazy(async () => import('pages/newsletters/Newsletters'));
 const SubscriptionSales = lazy(async () => import('pages/subscription-sales/SubscriptionSales'));
+const SubscriptionPlans = lazy(async () => import('pages/subscription-plans/SubscriptionPlans'));
+const SubscriptionTransactions = lazy(async () => import('pages/subscription-transactions/SubscriptionTransactions'));
 const Subscribers = lazy(async () => import('pages/subscribers/Subscribers'));
 const UserDistributions = lazy(async () => import('pages/user-distributions/UserDistributions'));
 const Settings = lazy(async () => import('pages/settings/Settings'));
@@ -86,6 +88,14 @@ const routes: RouteObject[] = [
           {
             path: paths.subscriptionSales,
             element: <SubscriptionSales />,
+          },
+          {
+            path: paths.subscriptionPlans,
+            element: <SubscriptionPlans />,
+          },
+          {
+            path: paths.subscriptionTransactions,
+            element: <SubscriptionTransactions />,
           },
           {
             path: paths.subscribers,

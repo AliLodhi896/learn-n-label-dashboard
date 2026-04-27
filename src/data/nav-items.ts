@@ -58,6 +58,20 @@ const navItems: NavItem[] = [
     collapsible: false,
   },
   {
+    title: 'Subscription Plans',
+    path: '/subscription-plans',
+    icon: 'mdi:credit-card-outline',
+    active: true,
+    collapsible: false,
+  },
+  {
+    title: 'Transactions',
+    path: '/subscription-transactions',
+    icon: 'mdi:swap-horizontal',
+    active: true,
+    collapsible: false,
+  },
+  {
     title: 'Subscribers',
     path: '/subscribers',
     icon: 'mdi:account-group',
