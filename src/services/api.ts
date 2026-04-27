@@ -1,7 +1,8 @@
-// Use /api proxy in dev and Vercel rewrites in production
-// - dev: Vite proxy forwards /api/* to backend
-// - prod: Vercel rewrites forward /api/* to backend
-const API_BASE_URL = '/';
+// Live backend default.
+// Can be overridden via Vite env: VITE_API_BASE_URL (e.g. local dev/proxy).
+const API_BASE_URL =
+  ((import.meta as any)?.env?.VITE_API_BASE_URL as string | undefined) ||
+  'https://learn-n-label-backend.vercel.app/';
 
 export interface ApiError {
   message: string;
