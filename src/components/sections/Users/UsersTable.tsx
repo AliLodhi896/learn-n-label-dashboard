@@ -1,4 +1,4 @@
-import { ChangeEvent, ReactElement, useMemo, useState, useEffect } from 'react';
+import { ChangeEvent, ReactElement, useCallback, useMemo, useState, useEffect } from 'react';
 import {
   Avatar,
   Divider,
@@ -12,6 +12,8 @@ import {
   Menu,
   MenuItem,
   Chip,
+  ToggleButton,
+  ToggleButtonGroup,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -33,6 +35,7 @@ const UsersTable = (): ReactElement => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [subscriptionFilter, setSubscriptionFilter] = useState<'all' | 'subscribed' | 'unsubscribed'>('all');
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -367,6 +370,18 @@ const UsersTable = (): ReactElement => {
     handleGridSearch(searchValue);
   };
 
+  const isSubscribedUser = useCallback((user: User) => {
+    return Boolean(user.subscription?.has_active_subscription ?? user.has_active_subscription);
+  }, []);
+
+  const filteredUsers = useMemo(() => {
+    if (subscriptionFilter === 'all') return users;
+    if (subscriptionFilter === 'subscribed') {
+      return users.filter((u) => isSubscribedUser(u));
+    }
+    return users.filter((u) => !isSubscribedUser(u));
+  }, [users, subscriptionFilter, isSubscribedUser]);
+
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
@@ -445,6 +460,24 @@ const UsersTable = (): ReactElement => {
             Users
           </Typography>
           <Stack direction="row" spacing={2} alignItems="center">
+            <ToggleButtonGroup
+              exclusive
+              size="small"
+              value={subscriptionFilter}
+              onChange={(_e, value) => {
+                if (!value) return;
+                setSubscriptionFilter(value);
+              }}
+              sx={{
+                bgcolor: 'background.default',
+                borderRadius: 10,
+                '& .MuiToggleButton-root': { textTransform: 'none', px: 2, borderRadius: 10 },
+              }}
+            >
+              <ToggleButton value="all">All</ToggleButton>
+              <ToggleButton value="subscribed">Subscribed</ToggleButton>
+              <ToggleButton value="unsubscribed">Unsubscribed</ToggleButton>
+            </ToggleButtonGroup>
             <TextField
               variant="filled"
               placeholder="Search users..."
@@ -481,7 +514,7 @@ const UsersTable = (): ReactElement => {
           <DataGrid
             apiRef={apiRef}
             columns={visibleColumns}
-            rows={users}
+            rows={filteredUsers}
             getRowId={(row) => {
               const id = row._id || row.id;
               if (!id) {

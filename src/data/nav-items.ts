@@ -72,13 +72,6 @@ const navItems: NavItem[] = [
     collapsible: false,
   },
   {
-    title: 'Subscribers',
-    path: '/subscribers',
-    icon: 'mdi:account-group',
-    active: true,
-    collapsible: false,
-  },
-  {
     title: 'Distributions',
     path: '/user-distributions',
     icon: 'mdi:share-variant',
