@@ -91,7 +91,7 @@ const Revenue = (): ReactElement => {
 
   return (
     <Stack
-      bgcolor="common.white"
+      bgcolor="background.paper"
       borderRadius={5}
       minHeight={460}
       height={1}

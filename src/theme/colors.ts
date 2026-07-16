@@ -1,3 +1,18 @@
+/** Brand + surface tokens for Learn-n Label dashboard */
+
+export const brand = {
+  50: '#F4F7E0',
+  100: '#E8EDC4',
+  200: '#D4DC8F',
+  300: '#C4CE5A',
+  400: '#B8C43F',
+  500: '#B0BD31',
+  600: '#8B9524',
+  700: '#6B731C',
+  800: '#4A5014',
+  900: '#2A2E0C',
+};
+
 export const orange = {
   50: '#FFC794',
   100: '#FFBB7F',
@@ -94,4 +109,26 @@ export const cream = {
   700: '#99928C',
   800: '#66625E',
   900: '#33312F',
+};
+
+/** Dark surfaces — olive-tinted charcoal */
+export const darkSurface = {
+  deepest: '#0A0C08',
+  default: '#0F120C',
+  paper: '#161B12',
+  elevated: '#1C2318',
+  hover: '#232B1E',
+  border: 'rgba(176, 189, 49, 0.14)',
+  borderStrong: 'rgba(176, 189, 49, 0.28)',
+};
+
+/** Light surfaces — email cream system */
+export const lightSurface = {
+  default: '#EEF1E4',
+  paper: '#FFFFFF',
+  elevated: '#F7F8F1',
+  border: '#E4E8D4',
+  ink: '#1A1F0A',
+  muted: '#6B7280',
+  body: '#2D3318',
 };

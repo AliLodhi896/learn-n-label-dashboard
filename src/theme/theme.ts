@@ -1,4 +1,4 @@
-import { createTheme } from '@mui/material';
+import { createTheme, Theme } from '@mui/material';
 
 import TablePagination from './components/TablePagination';
 import PaginationItem from './components/PaginationItem';
@@ -29,54 +29,65 @@ import Link from './components/Link';
 import Menu from './components/Menu';
 
 import typography from './typography';
-import palette from './palette';
-import shadows from './shadows';
+import { getPalette, ColorMode } from './palette';
+import { getShadows } from './shadows';
 import Collapse from './components/Collapse';
 import ListItem from './components/ListItem';
 import Tooltip from './components/Tooltip';
 import FormControl from './components/FormControl';
 
-export const theme = createTheme({
-  typography: typography,
-  palette: palette,
-  components: {
-    MuiTablePagination: TablePagination,
-    MuiInputAdornment: InputAdornment,
-    MuiListItemButton: ListItemButton,
-    MuiPaginationItem: PaginationItem,
-    MuiOutlinedInput: OutlinedInput,
-    MuiListItemIcon: ListItemIcon,
-    MuiListItemText: ListItemText,
-    MuiCssBaseline: CssBaseline,
-    MuiFilledInput: FilledInput,
-    MuiFormControl: FormControl,
-    MuiIconButton: IconButton,
-    MuiPagination: Pagination,
-    MuiInputLabel: InputLabel,
-    MuiInputBase: InputBase,
-    MuiTextField: TextField,
-    MuiCollapse: Collapse,
-    MuiDataGrid: DataGrid,
-    MuiListItem: ListItem,
-    MuiToolbar: Toolbar,
-    MuiTooltip: Tooltip,
-    MuiAppBar: AppBar,
-    MuiAvatar: Avatar,
-    MuiButton: Button,
-    MuiBadge: Badge,
-    MuiGrid2: Grid2,
-    MuiInput: Input,
-    MuiPaper: Paper,
-    MuiStack: Stack,
-    MuiCard: Card,
-    MuiLink: Link,
-    MuiMenu: Menu,
-  },
-  zIndex: {
-    appBar: 1100,
-  },
-});
+export const createAppTheme = (mode: ColorMode = 'dark'): Theme => {
+  const theme = createTheme({
+    typography,
+    palette: getPalette(mode),
+    shape: {
+      borderRadius: 10,
+    },
+    components: {
+      MuiTablePagination: TablePagination,
+      MuiInputAdornment: InputAdornment,
+      MuiListItemButton: ListItemButton,
+      MuiPaginationItem: PaginationItem,
+      MuiOutlinedInput: OutlinedInput,
+      MuiListItemIcon: ListItemIcon,
+      MuiListItemText: ListItemText,
+      MuiCssBaseline: CssBaseline,
+      MuiFilledInput: FilledInput,
+      MuiFormControl: FormControl,
+      MuiIconButton: IconButton,
+      MuiPagination: Pagination,
+      MuiInputLabel: InputLabel,
+      MuiInputBase: InputBase,
+      MuiTextField: TextField,
+      MuiCollapse: Collapse,
+      MuiDataGrid: DataGrid,
+      MuiListItem: ListItem,
+      MuiToolbar: Toolbar,
+      MuiTooltip: Tooltip,
+      MuiAppBar: AppBar,
+      MuiAvatar: Avatar,
+      MuiButton: Button,
+      MuiBadge: Badge,
+      MuiGrid2: Grid2,
+      MuiInput: Input,
+      MuiPaper: Paper,
+      MuiStack: Stack,
+      MuiCard: Card,
+      MuiLink: Link,
+      MuiMenu: Menu,
+    },
+    zIndex: {
+      appBar: 1100,
+    },
+  });
 
-shadows.forEach((shadow, index) => {
-  theme.shadows[index] = shadow;
-});
+  const shadows = getShadows(mode);
+  shadows.forEach((shadow, index) => {
+    theme.shadows[index] = shadow;
+  });
+
+  return theme;
+};
+
+/** Default dark theme for static imports */
+export const theme = createAppTheme('dark');

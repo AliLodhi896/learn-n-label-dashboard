@@ -28,7 +28,17 @@ const MainLayout = ({ children }: PropsWithChildren): ReactElement => {
 
   return (
     <>
-      <Stack direction="row" minHeight="100vh" bgcolor="background.default">
+      <Stack
+        direction="row"
+        minHeight="100vh"
+        bgcolor="background.default"
+        sx={{
+          backgroundImage: (theme) =>
+            theme.palette.mode === 'dark'
+              ? 'radial-gradient(ellipse 80% 50% at 20% -10%, rgba(176,189,49,0.09), transparent 55%), radial-gradient(ellipse 60% 40% at 90% 10%, rgba(39,208,149,0.05), transparent 50%)'
+              : 'radial-gradient(ellipse 80% 50% at 10% -10%, rgba(176,189,49,0.12), transparent 55%)',
+        }}
+      >
         <Topbar handleDrawerToggle={handleDrawerToggle} />
         <Box
           component="nav"
@@ -41,7 +51,7 @@ const MainLayout = ({ children }: PropsWithChildren): ReactElement => {
             onTransitionEnd={handleDrawerTransitionEnd}
             onClose={handleDrawerClose}
             ModalProps={{
-              keepMounted: true, // Better open performance on mobile.
+              keepMounted: true,
             }}
             sx={{
               display: { xs: 'block', lg: 'none' },
@@ -49,6 +59,7 @@ const MainLayout = ({ children }: PropsWithChildren): ReactElement => {
                 boxSizing: 'border-box',
                 border: 0,
                 backgroundColor: 'background.default',
+                backgroundImage: 'none',
               },
             }}
           >
@@ -62,7 +73,8 @@ const MainLayout = ({ children }: PropsWithChildren): ReactElement => {
                 boxSizing: 'border-box',
                 width: drawerWidth,
                 border: 0,
-                backgroundColor: 'background.default',
+                backgroundColor: 'transparent',
+                backgroundImage: 'none',
               },
             }}
             open

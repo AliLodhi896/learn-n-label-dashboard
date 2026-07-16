@@ -67,7 +67,7 @@ const BuyersProfile = (): ReactElement => {
   return (
     <Stack
       sx={{
-        bgcolor: 'common.white',
+        bgcolor: 'background.paper',
         borderRadius: 5,
         height: 1,
         flex: '1 1 auto',

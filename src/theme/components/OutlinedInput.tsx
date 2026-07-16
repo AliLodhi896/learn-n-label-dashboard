@@ -8,22 +8,30 @@ const OutlinedInput: Components<Omit<Theme, 'components'>>['MuiOutlinedInput'] =
   },
   styleOverrides: {
     root: ({ theme }) => ({
-      borderRadius: 999,
+      borderRadius: 14,
       borderWidth: pxToRem(1),
       borderStyle: 'solid',
       borderColor: theme.palette.divider,
-      backgroundColor: theme.palette.background.paper,
+      backgroundColor:
+        theme.palette.mode === 'dark'
+          ? 'rgba(255,255,255,0.03)'
+          : theme.palette.background.paper,
+      transition: 'border-color 0.2s ease, background-color 0.2s ease',
       '&.MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
-        border: '1px solid black',
+        border: `1px solid ${theme.palette.primary.main}`,
+      },
+      '&.MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline': {
+        borderColor: theme.palette.primary.main,
       },
       '&.MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline > legend': {
         width: 0,
       },
     }),
     input: ({ theme }) => ({
-      paddingLeft: pxToRem(20),
+      paddingLeft: pxToRem(18),
       paddingTop: pxToRem(12),
       paddingBottom: pxToRem(12),
+      color: theme.palette.text.primary,
       '&::placeholder': {
         opacity: 1,
         color: theme.palette.text.secondary,
@@ -31,18 +39,12 @@ const OutlinedInput: Components<Omit<Theme, 'components'>>['MuiOutlinedInput'] =
     }),
     notchedOutline: ({ theme }) => ({
       borderColor: theme.palette.divider,
-      '&:hover': {
-        borderColor: theme.palette.primary.main,
-      },
-      '&:focus': {
-        borderColor: theme.palette.secondary.main,
-      },
     }),
     adornedEnd: ({ theme }) => ({
-      color: theme.palette.common.black,
+      color: theme.palette.text.secondary,
     }),
     inputAdornedEnd: ({ theme }) => ({
-      color: theme.palette.common.black,
+      color: theme.palette.text.primary,
     }),
   },
 };

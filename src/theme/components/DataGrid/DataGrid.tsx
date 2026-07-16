@@ -14,12 +14,13 @@ const DataGrid: DataGridComponents<Omit<Theme, 'components'>>['MuiDataGrid'] = {
   styleOverrides: {
     root: ({ theme }) => ({
       backgroundColor: theme.palette.background.paper,
-      border: 'none',
+      border: `1px solid ${theme.palette.divider}`,
       borderColor: theme.palette.divider,
-      '--DataGrid-rowBorderColor': theme.palette.background.paper,
+      '--DataGrid-rowBorderColor': theme.palette.divider,
       '--DataGrid-containerBackground': theme.palette.background.paper,
-      borderBottomLeftRadius: theme.spacing(2.5),
-      borderBottomRightRadius: theme.spacing(2.5),
+      borderRadius: theme.spacing(2),
+      borderBottomLeftRadius: theme.spacing(2),
+      borderBottomRightRadius: theme.spacing(2),
       '& .MuiDataGrid-filler': {
         flex: 0,
       },
@@ -78,7 +79,10 @@ const DataGrid: DataGridComponents<Omit<Theme, 'components'>>['MuiDataGrid'] = {
       border: 'none',
       width: '100%',
       '&:hover': {
-        backgroundColor: theme.palette.background.default,
+        backgroundColor:
+          theme.palette.mode === 'dark'
+            ? 'rgba(176, 189, 49, 0.06)'
+            : theme.palette.action.hover,
       },
     }),
     virtualScroller: () => ({

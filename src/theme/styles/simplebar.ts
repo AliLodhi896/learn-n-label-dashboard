@@ -8,11 +8,13 @@ const simplebar = (theme: Theme) => ({
           cursor: 'grab',
           border: 1,
           borderStyle: 'solid',
-          borderColor: theme.palette.common.white,
+          borderColor: theme.palette.divider,
           maxHeight: '100vh',
-          background: `${theme.palette.grey[300]}`,
+          background: theme.palette.mode === 'dark'
+            ? 'rgba(176, 189, 49, 0.35)'
+            : theme.palette.grey[400],
           '&:hover': {
-            backgroundColor: theme.palette.grey[800],
+            backgroundColor: theme.palette.primary.main,
           },
         },
 

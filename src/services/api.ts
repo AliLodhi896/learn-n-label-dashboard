@@ -1,5 +1,5 @@
-// Live backend default.
-// Can be overridden via Vite env: VITE_API_BASE_URL (e.g. local dev/proxy).
+// Production backend default.
+// Override via Vite env: VITE_API_BASE_URL (trailing slash required).
 const API_BASE_URL =
   ((import.meta as any)?.env?.VITE_API_BASE_URL as string | undefined) ||
   'https://learn-n-label-backend.vercel.app/';

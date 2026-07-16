@@ -55,6 +55,14 @@ export interface UsersResponse {
   data?: User[];
 }
 
+export interface SendEmailResult {
+  message?: string;
+  sent: number;
+  failed: number;
+  total: number;
+  failures?: { email: string; error: string }[];
+}
+
 class UsersService {
   async getAllUsers(): Promise<User[]> {
     try {
@@ -157,6 +165,34 @@ class UsersService {
         throw error;
       }
       throw new Error('Failed to create user');
+    }
+  }
+
+  async sendEmail(data: {
+    subject: string;
+    html: string;
+    userIds?: string[];
+    send_to_all?: boolean;
+  }): Promise<SendEmailResult> {
+    try {
+      const response = await apiService.post<{
+        success?: boolean;
+        result?: SendEmailResult;
+      }>('/api/admin/users/send-email', data);
+
+      if (response.success && response.result) {
+        return response.result;
+      }
+      if ((response as any).sent !== undefined) {
+        return response as unknown as SendEmailResult;
+      }
+      throw new Error('Invalid response format');
+    } catch (error) {
+      console.error('Send Email Error:', error);
+      if (error && typeof error === 'object' && 'message' in error) {
+        throw error;
+      }
+      throw new Error('Failed to send email');
     }
   }
 }

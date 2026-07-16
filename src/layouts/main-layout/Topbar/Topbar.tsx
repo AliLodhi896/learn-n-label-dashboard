@@ -7,6 +7,7 @@ import {
   Stack,
   TextField,
   Toolbar,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import IconifyIcon from 'components/base/IconifyIcon';
@@ -17,6 +18,7 @@ import capitalizePathname from 'helpers/capitalize-pathname';
 import AccountDropdown from './AccountDropdown';
 import Image from 'components/base/Image';
 import logo from 'assets/logo/logo.svg';
+import { useColorMode } from 'providers/ColorModeProvider';
 
 interface TopbarProps {
   handleDrawerToggle: MouseEventHandler;
@@ -25,6 +27,7 @@ interface TopbarProps {
 const Topbar = ({ handleDrawerToggle }: TopbarProps): ReactElement => {
   const { pathname } = useLocation();
   const title = capitalizePathname(pathname);
+  const { mode, toggleColorMode } = useColorMode();
 
   return (
     <AppBar
@@ -55,7 +58,9 @@ const Topbar = ({ handleDrawerToggle }: TopbarProps): ReactElement => {
               m: 0,
               p: 0.75,
               display: { lg: 'none' },
-              bgcolor: 'inherit',
+              bgcolor: 'action.hover',
+              border: (theme) => `1px solid ${theme.palette.divider}`,
+              borderRadius: 2,
             }}
           >
             <IconifyIcon icon="mdi:menu" />
@@ -68,7 +73,9 @@ const Topbar = ({ handleDrawerToggle }: TopbarProps): ReactElement => {
               p: 1,
               display: { xs: 'flex', lg: 'none' },
               mr: 'auto',
-              bgcolor: 'inherit',
+              bgcolor: 'action.hover',
+              border: (theme) => `1px solid ${theme.palette.divider}`,
+              borderRadius: 2,
             }}
           >
             <IconifyIcon icon="mdi:search" width={1} height={1} />
@@ -81,9 +88,23 @@ const Topbar = ({ handleDrawerToggle }: TopbarProps): ReactElement => {
           alignItems="center"
           flex={'1 1 auto'}
         >
-          <Typography variant="h5" component="h5">
-            {pathname === '/' ? 'Dashboard' : title}
-          </Typography>
+          <Box>
+            <Typography
+              variant="overline"
+              sx={{
+                display: 'block',
+                color: 'primary.main',
+                letterSpacing: '0.14em',
+                lineHeight: 1.2,
+                mb: 0.25,
+              }}
+            >
+              Learn-n Label
+            </Typography>
+            <Typography variant="h5" component="h5" fontWeight={700}>
+              {pathname === '/' ? 'Dashboard' : title}
+            </Typography>
+          </Box>
           <TextField
             variant="outlined"
             placeholder="Search..."
@@ -98,12 +119,40 @@ const Topbar = ({ handleDrawerToggle }: TopbarProps): ReactElement => {
             sx={{ maxWidth: 330 }}
           />
         </Stack>
-        <Stack direction="row" alignItems="center" gap={{ xs: 1, sm: 1.75 }}>
+        <Stack direction="row" alignItems="center" gap={{ xs: 1, sm: 1.5 }}>
+          <Tooltip title={mode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}>
+            <IconButton
+              onClick={toggleColorMode}
+              aria-label="toggle color mode"
+              sx={{
+                width: 42,
+                height: 42,
+                borderRadius: 2,
+                bgcolor: 'action.hover',
+                border: (theme) => `1px solid ${theme.palette.divider}`,
+                color: 'primary.main',
+                '&:hover': {
+                  bgcolor: 'action.selected',
+                },
+              }}
+            >
+              <IconifyIcon
+                icon={mode === 'dark' ? 'mdi:white-balance-sunny' : 'mdi:moon-waning-crescent'}
+                width={22}
+                height={22}
+              />
+            </IconButton>
+          </Tooltip>
           <AccountDropdown />
         </Stack>
       </Toolbar>
     </AppBar>
   );
 };
+
+/** Local helper — avoid extra import for a tiny wrapper */
+function Box({ children }: { children: React.ReactNode }) {
+  return <Stack component="div">{children}</Stack>;
+}
 
 export default Topbar;

@@ -7,6 +7,7 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
+  alpha,
 } from '@mui/material';
 import { OverridableComponent } from '@mui/material/OverridableComponent';
 import IconifyIcon from 'components/base/IconifyIcon';
@@ -22,6 +23,7 @@ const NavButton = ({ navItem, Link }: NavItemProps): ReactElement => {
   const { pathname } = useLocation();
   const [checked, setChecked] = useState(false);
   const [nestedChecked, setNestedChecked] = useState<boolean[]>([]);
+  const isActive = pathname === navItem.path;
 
   const handleNestedChecked = (index: any, value: boolean) => {
     const updatedBooleanArray = [...nestedChecked];
@@ -32,13 +34,26 @@ const NavButton = ({ navItem, Link }: NavItemProps): ReactElement => {
   return (
     <ListItem
       sx={{
-        my: 1.25,
+        my: 0.5,
+        p: 0,
         borderRadius: 2,
-        backgroundColor: pathname === navItem.path ? 'primary.main' : '',
-        color: pathname === navItem.path ? 'common.white' : 'text.secondary',
+        overflow: 'hidden',
+        backgroundColor: isActive
+          ? (theme) => alpha(theme.palette.primary.main, 0.16)
+          : 'transparent',
+        color: isActive ? 'primary.main' : 'text.secondary',
+        border: (theme) =>
+          isActive
+            ? `1px solid ${alpha(theme.palette.primary.main, 0.35)}`
+            : '1px solid transparent',
         '&:hover': {
-          backgroundColor: pathname === navItem.path ? 'primary.main' : 'action.focus',
-          opacity: 1.5,
+          backgroundColor: isActive
+            ? (theme) => alpha(theme.palette.primary.main, 0.22)
+            : 'action.hover',
+        },
+        '& .MuiListItemIcon-root': {
+          color: 'inherit',
+          minWidth: 36,
         },
       }}
     >
@@ -48,7 +63,10 @@ const NavButton = ({ navItem, Link }: NavItemProps): ReactElement => {
             <ListItemIcon>
               <IconifyIcon icon={navItem.icon as string} width={1} height={1} />
             </ListItemIcon>
-            <ListItemText>{navItem.title}</ListItemText>
+            <ListItemText
+              primary={navItem.title}
+              primaryTypographyProps={{ fontWeight: isActive ? 700 : 500, fontSize: 14 }}
+            />
             <ListItemIcon>
               {navItem.collapsible &&
                 (checked ? (
@@ -64,12 +82,10 @@ const NavButton = ({ navItem, Link }: NavItemProps): ReactElement => {
                 <ListItem
                   key={idx}
                   sx={{
-                    backgroundColor: pathname === navItem.path ? 'primary.main' : '',
-                    color: pathname === navItem.path ? 'common.white' : 'text.secondary',
-                    '&:hover': {
-                      backgroundColor: pathname === navItem.path ? 'primary.main' : 'action.focus',
-                      opacity: 1.5,
-                    },
+                    backgroundColor: isActive
+                      ? (theme) => alpha(theme.palette.primary.main, 0.1)
+                      : '',
+                    color: isActive ? 'primary.main' : 'text.secondary',
                   }}
                 >
                   {subListItem.collapsible ? (
@@ -134,12 +150,15 @@ const NavButton = ({ navItem, Link }: NavItemProps): ReactElement => {
         <ListItemButton
           LinkComponent={Link}
           href={navItem.path}
-          sx={{ opacity: navItem.active ? 1 : 0.6 }}
+          sx={{ opacity: navItem.active ? 1 : 0.55, py: 1.1 }}
         >
           <ListItemIcon>
             <IconifyIcon icon={navItem.icon as string} width={1} height={1} />
           </ListItemIcon>
-          <ListItemText>{navItem.title}</ListItemText>
+          <ListItemText
+            primary={navItem.title}
+            primaryTypographyProps={{ fontWeight: isActive ? 700 : 500, fontSize: 14 }}
+          />
         </ListItemButton>
       )}
     </ListItem>

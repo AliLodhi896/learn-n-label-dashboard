@@ -40,7 +40,7 @@ const WebsiteVisitorsChart = ({
           startAngle: 0,
           itemStyle: {
             borderRadius: 10,
-            borderColor: theme.palette.common.white,
+            borderColor: theme.palette.background.paper,
             borderWidth: 2,
           },
           color: colors,

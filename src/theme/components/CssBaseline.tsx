@@ -13,6 +13,16 @@ const CssBaseline: Components<Omit<Theme, 'components'>>['MuiCssBaseline'] = {
     },
     body: {
       ...scrollbar(theme),
+      backgroundColor: theme.palette.background.default,
+      color: theme.palette.text.primary,
+      selection: undefined,
+    },
+    '::selection': {
+      backgroundColor:
+        theme.palette.mode === 'dark'
+          ? 'rgba(176, 189, 49, 0.35)'
+          : 'rgba(176, 189, 49, 0.28)',
+      color: theme.palette.text.primary,
     },
     ...echart(),
     ...simplebar(theme),

@@ -1,5 +1,6 @@
 import { ReactElement } from 'react';
 import {
+  Box,
   Link,
   List,
   ListItem,
@@ -7,6 +8,7 @@ import {
   ListItemIcon,
   ListItemText,
   Stack,
+  Typography,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
@@ -29,83 +31,116 @@ const Sidebar = (): ReactElement => {
 
   return (
     <Stack
-      bgcolor="background.paper"
       height={1}
-      boxShadow={(theme) => theme.shadows[4]}
       sx={{
         overflow: 'hidden',
-        margin: { xs: 0, lg: 3.75 },
-        borderRadius: { xs: 0, lg: 5 },
+        margin: { xs: 0, lg: 2.5 },
+        borderRadius: { xs: 0, lg: 3 },
+        width: { xs: 260, lg: 230 },
+        bgcolor: 'background.paper',
+        border: (theme) => `1px solid ${theme.palette.divider}`,
+        boxShadow: (theme) => theme.shadows[4],
         '&:hover': {
           overflowY: 'auto',
         },
-        width: 218,
       }}
     >
-      <Link
-        href="/"
+      <Box
         sx={{
-          mt: 6.25,
-          bgcolor: 'background.paper',
-          borderRadius: 5,
-          width: 120,
-          height: 120,
-          mx: 'auto',
+          px: 2.5,
+          pt: 3.5,
+          pb: 2,
+          textAlign: 'center',
+          borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
         }}
       >
-        <Image src={logo} width={1} />
-      </Link>
+        <Link
+          href="/"
+          sx={{
+            display: 'inline-flex',
+            width: 88,
+            height: 88,
+            borderRadius: 3,
+            overflow: 'hidden',
+            bgcolor: (theme) =>
+              theme.palette.mode === 'dark'
+                ? 'rgba(176,189,49,0.08)'
+                : 'rgba(176,189,49,0.1)',
+            border: (theme) => `1px solid ${theme.palette.divider}`,
+            p: 1,
+          }}
+        >
+          <Image src={logo} width={1} />
+        </Link>
+        <Typography
+          sx={{
+            mt: 1.5,
+            fontWeight: 700,
+            fontSize: 15,
+            color: 'text.primary',
+            letterSpacing: 0.2,
+          }}
+        >
+          Learn-n Label
+        </Typography>
+        <Typography
+          sx={{
+            mt: 0.35,
+            fontSize: 10,
+            letterSpacing: '0.16em',
+            textTransform: 'uppercase',
+            color: 'primary.main',
+            fontWeight: 600,
+          }}
+        >
+          Admin console
+        </Typography>
+      </Box>
+
       <Stack
         justifyContent="space-between"
-        mt={16.25}
         height={1}
         sx={{
           overflow: 'hidden',
           '&:hover': {
             overflowY: 'auto',
           },
-          width: 218,
+          pt: 1.5,
         }}
       >
         <List
           sx={{
-            mx: 2.5,
-            py: 1.25,
+            mx: 1.5,
+            py: 1,
             flex: '1 1 auto',
-            width: 178,
           }}
         >
           {navItems.map((navItem, index) => (
             <NavButton key={index} navItem={navItem} Link={Link} />
           ))}
         </List>
-        <List
-          sx={{
-            mx: 2.5,
-          }}
-        >
-          <ListItem
-            sx={{
-              mx: 0,
-              my: 2.5,
-            }}
-          >
+        <List sx={{ mx: 1.5, mb: 2 }}>
+          <ListItem sx={{ mx: 0, my: 0.5, p: 0 }}>
             <ListItemButton
               onClick={handleLogout}
               sx={{
-                backgroundColor: 'background.paper',
-                color: 'primary.main',
+                borderRadius: 2,
+                color: 'text.secondary',
+                border: (theme) => `1px solid ${theme.palette.divider}`,
                 '&:hover': {
-                  backgroundColor: 'primary.main',
+                  backgroundColor: 'error.main',
                   color: 'common.white',
-                  opacity: 1.5,
+                  borderColor: 'error.main',
+                  '& .MuiListItemIcon-root': {
+                    color: 'common.white',
+                  },
                 },
               }}
             >
-              <ListItemIcon>
+              <ListItemIcon sx={{ minWidth: 36, color: 'inherit' }}>
                 <IconifyIcon icon="ri:logout-circle-line" />
               </ListItemIcon>
-              <ListItemText>Log out</ListItemText>
+              <ListItemText primary="Log out" />
             </ListItemButton>
           </ListItem>
         </List>

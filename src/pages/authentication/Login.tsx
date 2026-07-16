@@ -75,9 +75,14 @@ const Login = (): ReactElement => {
     <Stack
       direction="row"
       bgcolor="background.paper"
-      boxShadow={(theme) => theme.shadows[3]}
+      boxShadow={(theme) => theme.shadows[4]}
       height={560}
       width={{ md: 960 }}
+      sx={{
+        borderRadius: 3,
+        overflow: 'hidden',
+        border: (theme) => `1px solid ${theme.palette.divider}`,
+      }}
     >
       <Stack width={{ md: 0.5 }} m={2.5} gap={4}>
         <Link href="/" mx="auto" >

@@ -8,9 +8,13 @@ const IconButton: Components<Omit<Theme, 'components'>>['MuiIconButton'] = {
       maxWidth: 40,
       maxHeight: 40,
       padding: theme.spacing(1.5),
-      backgroundColor: theme.palette.action.focus,
+      backgroundColor: theme.palette.action.hover,
+      color: theme.palette.text.secondary,
+      borderRadius: 10,
+      transition: 'background-color 0.2s ease, color 0.2s ease',
       '&:hover': {
-        backgroundColor: theme.palette.action.active,
+        backgroundColor: theme.palette.action.selected,
+        color: theme.palette.primary.main,
       },
     }),
     sizeSmall: () => ({

@@ -23,8 +23,9 @@ import {
   Alert,
   CircularProgress,
 } from '@mui/material';
-import { DataGrid, GridApi, GridColDef, GridSlots, useGridApiRef } from '@mui/x-data-grid';
+import { DataGrid, GridApi, GridColDef, GridRowSelectionModel, GridSlots, useGridApiRef } from '@mui/x-data-grid';
 import IconifyIcon from 'components/base/IconifyIcon';
+import RichTextEditor from 'components/sections/Settings/ClassicEditor';
 import { usersService, User } from 'services/users';
 import UsersPagination from './UsersPagination';
 import dotsIcon from 'assets/dots.png';
@@ -41,6 +42,15 @@ const UsersTable = (): ReactElement => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [addUserDialogOpen, setAddUserDialogOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  const [selectedRowIds, setSelectedRowIds] = useState<GridRowSelectionModel>([]);
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+  const [emailSendToAll, setEmailSendToAll] = useState(false);
+  const [emailSubject, setEmailSubject] = useState('');
+  const [emailHtml, setEmailHtml] = useState('');
+  const [emailSending, setEmailSending] = useState(false);
+  const [emailResult, setEmailResult] = useState<string | null>(null);
+  const [emailResultSeverity, setEmailResultSeverity] = useState<'success' | 'warning' | 'error'>('success');
+  const [emailError, setEmailError] = useState<string | null>(null);
   const [addUserFormData, setAddUserFormData] = useState({
     name: '',
     email: '',
@@ -53,6 +63,79 @@ const UsersTable = (): ReactElement => {
     password?: string;
     address?: string;
   }>({});
+
+  const resetEmailDialog = () => {
+    setEmailDialogOpen(false);
+    setEmailSendToAll(false);
+    setEmailSubject('');
+    setEmailHtml('');
+    setEmailSending(false);
+    setEmailResult(null);
+    setEmailResultSeverity('success');
+    setEmailError(null);
+  };
+
+  const openEmailDialog = (sendToAll: boolean) => {
+    setEmailSendToAll(sendToAll);
+    setEmailSubject('');
+    setEmailHtml('');
+    setEmailResult(null);
+    setEmailResultSeverity('success');
+    setEmailError(null);
+    setEmailDialogOpen(true);
+  };
+
+  const handleSendEmail = async () => {
+    const subject = emailSubject.trim();
+    const html = emailHtml.trim();
+    if (!subject) {
+      setEmailError('Subject is required');
+      return;
+    }
+    if (!html || !html.replace(/<[^>]+>/g, '').trim()) {
+      setEmailError('Email content is required');
+      return;
+    }
+
+    try {
+      setEmailSending(true);
+      setEmailError(null);
+      setEmailResult(null);
+
+      const payload = emailSendToAll
+        ? { subject, html, send_to_all: true }
+        : {
+            subject,
+            html,
+            userIds: selectedRowIds.map((id) => String(id)),
+          };
+
+      const result = await usersService.sendEmail(payload);
+      let summary = `Sent ${result.sent} of ${result.total}. Failed: ${result.failed}.`;
+      if (result.failures && result.failures.length > 0) {
+        const sample = result.failures
+          .slice(0, 3)
+          .map((f) => `${f.email}: ${f.error}`)
+          .join(' | ');
+        summary += ` ${sample}`;
+      }
+      setEmailResult(summary);
+      setEmailResultSeverity(
+        result.failed === 0 ? 'success' : result.sent === 0 ? 'error' : 'warning'
+      );
+      if (result.failed === 0) {
+        setSelectedRowIds([]);
+      }
+    } catch (err) {
+      const errorMessage =
+        err && typeof err === 'object' && 'message' in err
+          ? (err as { message: string }).message
+          : 'Failed to send email';
+      setEmailError(errorMessage);
+    } finally {
+      setEmailSending(false);
+    }
+  };
 
   useEffect(() => {
     fetchUsers();
@@ -495,6 +578,24 @@ const UsersTable = (): ReactElement => {
               sx={{ minWidth: 250 }}
             />
             <Button
+              variant="outlined"
+              startIcon={<IconifyIcon icon="mdi:email-multiple-outline" width={18} height={18} />}
+              onClick={() => openEmailDialog(false)}
+              disabled={selectedRowIds.length === 0}
+              sx={{ borderRadius: 10 }}
+            >
+              Send Email{selectedRowIds.length > 0 ? ` (${selectedRowIds.length})` : ''}
+            </Button>
+            <Button
+              variant="outlined"
+              startIcon={<IconifyIcon icon="mdi:email-fast-outline" width={18} height={18} />}
+              onClick={() => openEmailDialog(true)}
+              disabled={users.length === 0}
+              sx={{ borderRadius: 10 }}
+            >
+              Email All Users
+            </Button>
+            <Button
               variant="contained"
               startIcon={<IconifyIcon icon="mdi:account-plus" width={18} height={18} />}
               onClick={() => setAddUserDialogOpen(true)}
@@ -524,11 +625,14 @@ const UsersTable = (): ReactElement => {
               return String(id);
             }}
             getRowHeight={() => 70}
-            hideFooterSelectedRowCount
+            hideFooterSelectedRowCount={false}
             disableColumnResize
             disableColumnSelector
             disableRowSelectionOnClick
-            rowSelection={false}
+            checkboxSelection
+            rowSelectionModel={selectedRowIds}
+            onRowSelectionModelChange={(ids) => setSelectedRowIds(ids)}
+            keepNonExistentRowsSelected
             loading={loading}
             initialState={{
               pagination: { paginationModel: { pageSize: 5, page: 0 } },
@@ -622,6 +726,98 @@ const UsersTable = (): ReactElement => {
           >
             {actionLoading ? <CircularProgress size={20} /> : 'Delete'}
           </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={emailDialogOpen}
+        onClose={() => {
+          if (!emailSending) resetEmailDialog();
+        }}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            boxShadow: (theme) => theme.shadows[24],
+          },
+        }}
+      >
+        <DialogTitle sx={{ pb: 1.5, pt: 3, px: 3, borderBottom: 1, borderColor: 'divider' }}>
+          <Stack direction="row" alignItems="center" gap={1.5}>
+            <IconifyIcon icon="mdi:email-edit-outline" width={28} height={28} />
+            <Stack>
+              <Typography variant="h6" fontWeight={600}>
+                Send Email
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {emailSendToAll
+                  ? `All users (${users.length})`
+                  : `${selectedRowIds.length} selected user${selectedRowIds.length === 1 ? '' : 's'}`}
+              </Typography>
+            </Stack>
+          </Stack>
+        </DialogTitle>
+        <DialogContent sx={{ px: 3, pt: 3, pb: 2 }}>
+          {emailSendToAll && (
+            <Alert severity="warning" sx={{ mb: 2, mt: 1 }}>
+              This will email every non-admin user with a valid address (up to 500).
+            </Alert>
+          )}
+          {emailError && (
+            <Alert severity="error" sx={{ mb: 2, mt: emailSendToAll ? 0 : 1 }} onClose={() => setEmailError(null)}>
+              {emailError}
+            </Alert>
+          )}
+          {emailResult && (
+            <Alert
+              severity={emailResultSeverity}
+              sx={{ mb: 2, mt: emailSendToAll || emailError ? 0 : 1 }}
+            >
+              {emailResult}
+            </Alert>
+          )}
+          <TextField
+            fullWidth
+            label="Subject"
+            value={emailSubject}
+            onChange={(e) => setEmailSubject(e.target.value)}
+            disabled={emailSending}
+            sx={{ mb: 2, mt: 1 }}
+          />
+          <Typography variant="subtitle2" sx={{ mb: 1 }}>
+            Message
+          </Typography>
+          <RichTextEditor
+            value={emailHtml}
+            onChange={setEmailHtml}
+            placeholder="Write your email content..."
+            minHeight={260}
+          />
+          <DialogContentText sx={{ mt: 2 }}>
+            Emails are sent from the Learn-n Label team with the app logo in the header.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 3 }}>
+          <Button onClick={resetEmailDialog} disabled={emailSending}>
+            {emailResult ? 'Close' : 'Cancel'}
+          </Button>
+          {!emailResult && (
+            <Button
+              variant="contained"
+              onClick={handleSendEmail}
+              disabled={emailSending}
+              startIcon={
+                emailSending ? (
+                  <CircularProgress size={18} color="inherit" />
+                ) : (
+                  <IconifyIcon icon="mdi:send" width={18} height={18} />
+                )
+              }
+            >
+              {emailSending ? 'Sending…' : 'Send'}
+            </Button>
+          )}
         </DialogActions>
       </Dialog>
 

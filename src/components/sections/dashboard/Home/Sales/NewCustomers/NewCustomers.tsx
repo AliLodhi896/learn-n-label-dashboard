@@ -37,7 +37,7 @@ const NewCustomers = (): ReactElement => {
   return (
     <Box
       sx={{
-        bgcolor: 'common.white',
+        bgcolor: 'background.paper',
         borderRadius: 5,
         height: 1,
         flex: '1 1 auto',

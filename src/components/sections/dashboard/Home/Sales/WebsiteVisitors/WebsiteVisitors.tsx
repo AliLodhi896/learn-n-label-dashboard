@@ -99,7 +99,7 @@ const WebsiteVisitors = (): ReactElement => {
   return (
     <Box
       sx={{
-        bgcolor: 'common.white',
+        bgcolor: 'background.paper',
         borderRadius: 5,
         height: 'min-content',
         boxShadow: theme.shadows[4],
