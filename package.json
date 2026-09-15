@@ -17,9 +17,11 @@
     "@ckeditor/ckeditor5-react": "^11.0.1",
     "@emotion/react": "^11.11.4",
     "@emotion/styled": "^11.11.5",
+    "@iconify/react": "^4.1.1",
     "@mui/material": "^5.15.14",
     "@mui/x-data-grid": "^7.2.0",
     "@mui/x-data-grid-generator": "^7.2.0",
+    "@vitejs/plugin-react": "^4.2.1",
     "ckeditor5": "^47.4.0",
     "dayjs": "^1.11.10",
     "echarts": "^5.5.0",
@@ -28,20 +30,18 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.22.3",
-    "simplebar-react": "^3.2.5"
+    "simplebar-react": "^3.2.5",
+    "vite": "^5.2.0",
+    "vite-tsconfig-paths": "^4.3.2"
   },
   "devDependencies": {
-    "@iconify/react": "^4.1.1",
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",
     "@typescript-eslint/eslint-plugin": "^7.2.0",
     "@typescript-eslint/parser": "^7.2.0",
-    "@vitejs/plugin-react": "^4.2.1",
     "eslint": "^8.57.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.6",
-    "typescript": "^5.2.2",
-    "vite": "^5.2.0",
-    "vite-tsconfig-paths": "^4.3.2"
+    "typescript": "^5.2.2"
   }
 }
